@@ -53,10 +53,25 @@ app.post('/users', (request, response) => {
 
 app.get('/todos', checksExistsUserAccount, (request, response) => {
   // Complete aqui
+
 });
 
 app.post('/todos', checksExistsUserAccount, (request, response) => {
   // Complete aqui
+  const { title, deadline } = request.body;
+  const { user } = request;
+
+  const todoOperation = {
+    id: 'uuid',
+    title,
+    done: false,
+    deadline: new Date(deadline),
+    created_at: new Date()
+  };
+
+  user.todos.push(todoOperation);
+
+  return response.json(todoOperation);
 });
 
 app.put('/todos/:id', checksExistsUserAccount, (request, response) => {
