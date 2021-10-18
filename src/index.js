@@ -2,6 +2,9 @@ const express = require('express');
 const cors = require('cors');
 
 const { v4: uuidv4 } = require('uuid');
+const res = require('express/lib/response');
+const { response } = require('express');
+const req = require('express/lib/request');
 
 const app = express();
 
@@ -41,14 +44,14 @@ app.post('/users', (request, response) => {
     });
   }
 
-  users.push({
+  const user = {
     id: uuidv4(),
     name,
     username,
-    todos: [],
-  });
-
-  return response.status(200).send();
+    todos: []
+  };
+  users.push(user);
+  return response.status(201).json(user);
 });
 
 app.get('/todos', checksExistsUserAccount, (request, response) => {
@@ -65,7 +68,7 @@ app.post('/todos', checksExistsUserAccount, (request, response) => {
   const { user } = request;
 
   const todoOperation = {
-    id: 'uuid',
+    id: uuidv4(),
     title,
     done: false,
     deadline: new Date(deadline),
@@ -74,19 +77,63 @@ app.post('/todos', checksExistsUserAccount, (request, response) => {
 
   user.todos.push(todoOperation);
 
-  return response.json(todoOperation);
+  return response.status(201).json(todoOperation);
 });
 
 app.put('/todos/:id', checksExistsUserAccount, (request, response) => {
   // Complete aqui
+  const { title, deadline } = request.body;
+  const { user } = request;
+  
+  const { id } = request.params;
+
+  const todo = user.todos.find(todo => todo.id === id);
+
+  if(!todo) {
+    return response.status(404).json({ error: 'Todo not found!'});
+  }
+
+  todo.title = title;
+  todo.deadline = new Date(deadline);
+
+  return response.json(todo);
 });
 
 app.patch('/todos/:id/done', checksExistsUserAccount, (request, response) => {
   // Complete aqui
+  const { user } = request;
+  const { id } = request.params;
+
+  const todo = user.todos.find(todo => todo.id === id);
+
+  if(!todo) {
+    return response.status(404).json({ error: 'ID Todo not found!'});
+  }
+  todo.done = true;
+
+  return response.json(todo);
 });
 
 app.delete('/todos/:id', checksExistsUserAccount, (request, response) => {
   // Complete aqui
+  const { user } = request;
+  const { id } = request.params;
+
+  const todoId = user.todos.findIndex(todo => todo.id == id);
+
+  if(todoId == -1) {
+    return response.status(404).json({ error: 'ID Todo not found!' });
+  }
+
+  user.todos.splice(todoId, 1);
+
+  return response.status(204).json();
+
 });
 
+app.get('/users', checksExistsUserAccount, (request, response) => {
+  const { user } = request;
+  const todo = user.todos.find(todo => todo.id === id);
+  return response.json(user);
+})
 module.exports = app;
